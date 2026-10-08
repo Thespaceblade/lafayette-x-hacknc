@@ -197,15 +197,53 @@ const CHAT_STEPS = [
   { key: "unit", ask: "Unit?", placeholder: "e.g. W-104", skip: "Skip" },
   { key: "body", ask: "Message?", placeholder: "What's going on?", required: true, message: true },
 ];
-const chat = { step: 0, answers: {}, busy: false };
+const chat = { step: 0, answers: {}, busy: false, generation: 0 };
+let speakQueue = Promise.resolve();
 
 function addBubble(role, text) {
-  const li = document.createElement("li");
-  li.className = `bubble ${role}`;
-  li.textContent = text;
-  $("#chatLog").appendChild(li);
-  li.scrollIntoView({ block: "end" });
-  return li;
+  const turn = document.createElement("li");
+  turn.className = `turn ${role}`;
+  const bubble = document.createElement("p");
+  bubble.className = `bubble ${role}`;
+  if (role !== "bot") {
+    bubble.textContent = text;
+    turn.appendChild(bubble);
+    $("#chatLog").appendChild(turn);
+    turn.scrollIntoView({ block: "end" });
+    return bubble;
+  }
+
+  const logo = document.createElement("img");
+  logo.className = "chat-logo";
+  logo.src = "night-desk-logo.svg";
+  logo.width = 32;
+  logo.height = 32;
+  logo.alt = "";
+  logo.setAttribute("aria-hidden", "true");
+  turn.append(logo, bubble);
+
+  const spoken = { text };
+  const generation = chat.generation;
+  speakQueue = speakQueue.then(() => new Promise(resolve => {
+    if (generation !== chat.generation) { resolve(); return; }
+    bubble.classList.add("typing");
+    bubble.setAttribute("aria-label", "Night Desk is typing");
+    bubble.replaceChildren(document.createElement("span"), document.createElement("span"), document.createElement("span"));
+    $("#chatLog").appendChild(turn);
+    turn.scrollIntoView({ block: "end" });
+    window.setTimeout(() => {
+      if (generation !== chat.generation) { resolve(); return; }
+      bubble.classList.remove("typing");
+      bubble.removeAttribute("aria-label");
+      bubble.textContent = spoken.text;
+      turn.scrollIntoView({ block: "end" });
+      resolve();
+    }, 1000);
+  }));
+  return {
+    set textContent(value) { spoken.text = value; if (!bubble.classList.contains("typing") && bubble.isConnected) bubble.textContent = value; },
+    get textContent() { return spoken.text; },
+  };
 }
 
 function focusChat() {
@@ -240,6 +278,8 @@ function askStep() {
 }
 
 function resetChat() {
+  chat.generation += 1;
+  speakQueue = Promise.resolve();
   chat.step = 0;
   chat.answers = {};
   chat.busy = false;
