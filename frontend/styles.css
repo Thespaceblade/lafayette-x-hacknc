@@ -7,6 +7,7 @@
   :root { --bg: #12161c; --panel: #1b2129; --text: #e6e9ee; --muted: #9aa5b3; --line: #2c343f; --accent: #6d9fd1; --accent-ink: #0d1117; }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 8px 14px; }
@@ -18,6 +19,16 @@ button.primary { background: var(--accent); color: var(--accent-ink); border-col
 
 .layout { display: grid; grid-template-columns: 260px 1fr; gap: 24px; padding: 24px; max-width: 1200px; margin: 0 auto; }
 .topbar button { white-space: nowrap; }
+.switch { display: flex; gap: 6px; }
+.switch button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.resident { max-width: 640px; margin: 0 auto; padding: 24px; }
+.resident form, #receipt { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.resident form { display: flex; flex-direction: column; gap: 12px; }
+.resident h2, #receipt h2 { margin: 0 0 4px; font-size: 18px; }
+.resident label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); flex: 1; }
+.resident input, .resident select, .resident textarea { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+#receipt { margin-top: 16px; }
+#receipt .actions { margin-top: 12px; }
 
 .filters h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 20px 0 8px; }
 .filters input[type=search], .filters select { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }

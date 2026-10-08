@@ -187,12 +187,24 @@ function render() { renderCategories(); renderList(); }
 
 // ---- Form ---------------------------------------------------------------
 function updateEmergencyNote() {
-  const f = $("#requestForm");
-  const text = f.elements.body.value;
-  const cat = f.elements.category.value || (text.trim() ? classify(text) : "");
+  const text = $("#requestForm").elements.body.value;
   const note = $("#emergencyNote");
-  note.hidden = cat !== "emergency";
-  if (!note.hidden) note.textContent = safetyNote(text);
+  const emergency = text.trim() && classify(text) === "emergency";
+  note.hidden = !emergency;
+  if (emergency) note.textContent = safetyNote(text);
+}
+
+function showScreen(name) {
+  const resident = name === "resident";
+  $("#residentScreen").hidden = !resident;
+  $("#deskScreen").hidden = resident;
+  $("#showResident").classList.toggle("active", resident);
+  $("#showDesk").classList.toggle("active", !resident);
+  $("#screenLabel").textContent = resident ? "Resident" : "Desk";
+  if (!resident) render();
+  if (location.hash !== (resident ? "#resident" : "#desk")) {
+    history.replaceState(null, "", resident ? "#resident" : "#desk");
+  }
 }
 
 async function submitRequest(e) {
@@ -201,33 +213,34 @@ async function submitRequest(e) {
   const payload = {
     sender: f.elements.sender.value.trim(), contact: f.elements.contact.value.trim(), property: f.elements.property.value,
     unit: f.elements.unit.value.trim(), body: f.elements.body.value.trim(), channel: "web form",
-    category: f.elements.category.value || undefined,
   };
+  const sendBtn = f.querySelector("button[type=submit]");
+  sendBtn.disabled = true;
   let saved;
   try {
     const res = await fetch("/api/requests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (!res.ok) throw new Error(res.status);
     saved = await res.json();
   } catch {
-    saved = { ...payload, id: "N" + (state.requests.length + 1), received_at: new Date().toISOString() };
+    saved = { ...payload, id: "N" + (state.requests.length + 1), received_at: new Date().toISOString(), reply: "" };
   }
   const r = enrich({ ...saved, isNew: true });
   state.requests = markFollowUps([r, ...state.requests]);
   state.freshId = r.id;
   state.category = ""; state.sort = "newest"; $("#sort").value = "newest";
-  f.reset(); $("#emergencyNote").hidden = true;
-  $("#formDialog").close();
+  f.hidden = true;
+  $("#receiptReply").textContent = saved.reply || "Thanks. Someone at Laurel Hill will follow up.";
+  $("#receipt").hidden = false;
+  sendBtn.disabled = false;
   render();
 }
 
 // ---- Wire up ------------------------------------------------------------
 function init() {
-  $("#asOf").textContent = "Mon, Oct 5, 2026 7:00 AM (replay)";
+  $("#asOf").textContent = "Mon, Oct 5, 2026 7:00 AM";
   const propOpts = PROPERTIES.map(p => `<option>${p}</option>`).join("");
   $("#propertyFilter").insertAdjacentHTML("beforeend", propOpts);
   $("#formProperty").insertAdjacentHTML("beforeend", propOpts);
-  $("#formCategory").insertAdjacentHTML("beforeend",
-    CATEGORIES.filter(c => c.id !== "review").map(c => `<option value="${c.id}">${c.label}</option>`).join(""));
 
   $("#categoryList").addEventListener("click", e => {
     const b = e.target.closest("button[data-cat]"); if (!b) return;
@@ -238,11 +251,19 @@ function init() {
   $("#overdueOnly").addEventListener("change", e => { state.overdueOnly = e.target.checked; render(); });
   $("#sort").addEventListener("change", e => { state.sort = e.target.value; renderList(); });
 
-  $("#newBtn").addEventListener("click", () => $("#formDialog").showModal());
-  $("#cancelBtn").addEventListener("click", () => $("#formDialog").close());
   $("#requestForm").addEventListener("submit", submitRequest);
   $("#requestForm").elements.body.addEventListener("input", updateEmergencyNote);
-  $("#requestForm").elements.category.addEventListener("change", updateEmergencyNote);
+  $("#showResident").addEventListener("click", () => showScreen("resident"));
+  $("#showDesk").addEventListener("click", () => showScreen("desk"));
+  $("#toDesk").addEventListener("click", () => showScreen("desk"));
+  $("#sendAnother").addEventListener("click", () => {
+    $("#requestForm").reset();
+    $("#emergencyNote").hidden = true;
+    $("#requestForm").hidden = false;
+    $("#receipt").hidden = true;
+  });
+  window.addEventListener("hashchange", () => showScreen(location.hash === "#resident" ? "resident" : "desk"));
+  showScreen(location.hash === "#resident" ? "resident" : "desk");
 
   load();
 }
