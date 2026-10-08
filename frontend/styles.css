@@ -36,6 +36,7 @@ button.primary { background: var(--accent); color: var(--accent-ink); border-col
 .card .meta { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 13px; color: var(--muted); }
 .card .who { font-weight: 600; color: var(--text); }
 .card p { margin: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.agent { background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
 .badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; color: #fff; background: var(--c, var(--review)); }
 .tag { font-size: 12px; padding: 1px 7px; border: 1px solid var(--line); border-radius: 999px; }
 .overdue { color: var(--emergency); font-weight: 600; }
