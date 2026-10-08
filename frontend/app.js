@@ -97,12 +97,17 @@ const $ = s => document.querySelector(s);
 function enrich(r) {
   const received = new Date(r.received_at);
   const category = CAT[r.category] ? r.category : classify(r.body || "");
-  const due = CAT[category].due(received);
+  const due = r.deadline ? new Date(r.deadline) : CAT[category].due(received);
   return { ...r, receivedDate: received, category, language: r.language || detectLanguage(r.body || ""), due, overdue: due < NOW && !r.isNew };
 }
 function markFollowUps(list) {
   const seen = new Map();
   [...list].sort((a, b) => a.receivedDate - b.receivedDate).forEach(r => {
+    if ("linked_to" in r) {
+      r.followUp = r.linked_to;
+      seen.set((r.contact || r.sender || "") + "|" + (r.unit || ""), r.id);
+      return;
+    }
     const key = (r.contact || r.sender || "") + "|" + (r.unit || "");
     r.followUp = seen.has(key) ? seen.get(key) : null;
     seen.set(key, r.id);
@@ -168,8 +173,11 @@ function renderList() {
         <span>${esc(r.channel || "")} · ${fmt.format(r.receivedDate)}</span>
         ${r.language !== "en" ? `<span class="tag">${esc(r.language.toUpperCase())}</span>` : ""}
         ${r.followUp ? `<span class="tag">Follow-up to ${esc(r.followUp)}</span>` : ""}
+        ${typeof r.confidence === "number" ? `<span class="tag">${Math.round(r.confidence * 100)}%</span>` : ""}
+        ${r.gemini_called === true ? `<span class="tag">Gemini draft</span>` : r.gemini_called === false ? `<span class="tag">No LLM</span>` : ""}
       </div>
       <p>${esc(r.body)}</p>
+      ${r.agent ? `<p class="agent">${esc(r.agent)}</p>` : ""}
       <div class="foot"><span>Goes to: <strong>${esc(c.owner)}</strong></span><span>${dueText}</span><span>${esc(r.contact || "")}</span></div>
     </li>`;
   }).join("") : `<li class="empty">No requests match these filters.</li>`;

@@ -2,13 +2,14 @@
 
 One-hour hackathon project for Lafayette x HackNC.
 
-## Request inbox (front-end)
+## Request inbox
 
 ```
-python server.py        # then open http://localhost:8000
+python -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m uvicorn app.main:app --port 8000
 ```
 
-- Lists every request with a filter by problem type (emergency, urgent/routine repair, leasing, rent, noise, legal, ESA, possible fraud), by property, and by overdue as of Mon Oct 5, 7:00 AM.
-- **+ New request** opens a form; it posts to `POST /api/requests` and shows safety instructions right away for gas, CO, and fire.
-- Drop the track's `messages.csv` into `data/` and the server loads it instead of the built-in sample requests.
-- Each request's category comes from the server's `category` field when present; otherwise `frontend/app.js` falls back to a keyword classifier (`classify()`). Swap in the real classifier server-side.
+Open http://localhost:8000. Copy `.env.example` to `.env` and set `GEMINI_API_KEY` and `OPENROUTER_API_KEY`. Track files load from `../data/experienced`.
+
+Jev classifies every message. Gemini writes a draft only for emergencies and leasing. Paste-ready pitch messages are in `DEMO.md`.
