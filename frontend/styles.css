@@ -1,4 +1,4 @@
-/* Night Desk app styles. Colors, type, and shape come from night-desk-tokens.css. */
+/* Vigil app styles. Colors, type, and shape come from vigil-tokens.css. */
 :root {
   /* Suggestion from the design guide, not on the slide. */
   --nd-coral: #FF7A6B;
@@ -16,7 +16,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .logo { width: 40px; height: 40px; display: block; flex: none; }
 .topbar h1 { margin: 0; font-size: 36px; font-weight: var(--nd-weight-bold); line-height: var(--nd-leading-tight); color: var(--nd-ivory); }
-.sub { margin: 2px 0 0; color: var(--nd-mist); font-size: 14px; }
 .topbar button { white-space: nowrap; }
 .switch { display: flex; gap: 8px; }
 .switch button.active { background: var(--nd-amber); color: var(--nd-navy); border-color: var(--nd-amber); font-weight: var(--nd-weight-bold); }
@@ -68,6 +67,18 @@ body:has(#residentScreen:not([hidden])) { height: 100vh; display: flex; flex-dir
 .listhead select { width: auto; }
 .requests { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--nd-gap-tight); }
 .card { border-radius: var(--nd-radius-card); }
+.cat-emergency { --cat: #FF7A6B; }
+.cat-urgent { --cat: #F2B84B; }
+.cat-fraud { --cat: #F071A8; }
+.cat-rent { --cat: #C084FC; }
+.cat-legal { --cat: #818CF8; }
+.cat-esa { --cat: #5EEAD4; }
+.cat-leasing { --cat: #7DD3FC; }
+.cat-noise { --cat: #93A3F5; }
+.cat-routine { --cat: #86EFAC; }
+.cat-review { --cat: #C9D1E3; }
+.card[class*="cat-"] { border: 2px solid var(--cat); background: color-mix(in srgb, var(--cat) 24%, var(--nd-panel)); }
+.dot[class*="cat-"] { background: var(--cat); border: 0; }
 .card .meta { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 14px; color: var(--nd-mist); }
 .card .who { font-weight: var(--nd-weight-bold); color: var(--nd-ivory); }
 .card p { margin: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--nd-ivory); }

@@ -1,11 +1,11 @@
-# Night Desk design guide
+# Vigil design guide
 
-Taken from the pitch slide so the app matches it. Source of truth for the values is `docs/night-desk-tokens.css`. Logo file: `docs/night-desk-logo.svg`.
+Taken from the pitch slide so the app matches it. Source of truth for the values is `docs/vigil-tokens.css`. Logo file: `docs/vigil-logo.svg`.
 
 Anything marked (suggestion) is not on the slide and is our own extension.
 
 ## Theme
-Dark "night" theme: deep navy background, warm amber accent, ivory text. One accent color. Amber marks Night Desk itself, our numbers and anything that matters most. Muted blue marks the other approach or a baseline. Cards are rounded and flat, with a thin border and no shadows. The tone of the copy is plain and short, with no jargon.
+Dark "night" theme: deep navy background, warm amber accent, ivory text. One accent color. Amber marks Vigil itself, our numbers and anything that matters most. Muted blue marks the other approach or a baseline. Cards are rounded and flat, with a thin border and no shadows. The tone of the copy is plain and short, with no jargon.
 
 ## Font
 One typeface: **DM Sans** (Google Fonts), weights 400, 500 and 700. Fallback `Arial, sans-serif`.
@@ -53,7 +53,7 @@ All text pairs above pass WCAG AA (4.5:1) and most pass AAA (7:1). Contrast rati
 Four amber icons at 56px: Chat, Lightning, PaperPlane, Users (from the slide editor's built-in set). (suggestion) In the app, use Lucide equivalents: `message-square`, `zap`, `send`, `users`, stroke in amber.
 
 ## Logo
-A crescent moon and a small star in navy on an amber rounded square (corner radius about 23% of the width). The file is `docs/night-desk-logo.svg`.
+A crescent moon and a small star in navy on an amber rounded square (corner radius about 23% of the width). The file is `docs/vigil-logo.svg`.
 - Minimum size 32px.
 - Keep clear space of about a quarter of the logo width on every side.
 - On dark backgrounds, use the logo as is. The amber square carries it.

@@ -145,7 +145,7 @@ function renderCategories() {
   $("#categoryList").innerHTML = items.map(c => {
     const n = c.id ? pool.filter(r => r.category === c.id).length : pool.length;
     return `<li><button data-cat="${c.id}" class="${state.category === c.id ? "active" : ""}">
-      <span class="dot tone-${c.tone}"></span>${c.label}<span class="n">${n}</span></button></li>`;
+      <span class="dot${c.id ? ` cat-${c.id}` : ""}"></span>${c.label}<span class="n">${n}</span></button></li>`;
   }).join("");
 }
 
@@ -166,7 +166,7 @@ function renderList() {
       ? `<span class="overdue">Overdue by ${fmtDuration(NOW - r.due)} as of Mon 7:00 AM</span>`
       : `Respond by ${fmt.format(r.due)}`;
     const needsPerson = r.category === "review" || (typeof r.confidence === "number" && r.confidence < 0.6 && r.category !== "fraud");
-    return `<li class="card nd-card ${r.id === state.freshId ? "new" : ""}">
+    return `<li class="card nd-card cat-${r.category} ${r.id === state.freshId ? "new" : ""}">
       <div class="meta">
         <span class="badge tone-${c.tone}">${c.label}</span>
         ${needsPerson && r.category !== "review" ? `<span class="badge tone-person">Needs a person</span>` : ""}
@@ -215,7 +215,7 @@ function addBubble(role, text) {
 
   const logo = document.createElement("img");
   logo.className = "chat-logo";
-  logo.src = "night-desk-logo.svg";
+  logo.src = "vigil-logo.svg";
   logo.width = 32;
   logo.height = 32;
   logo.alt = "";
@@ -227,7 +227,7 @@ function addBubble(role, text) {
   speakQueue = speakQueue.then(() => new Promise(resolve => {
     if (generation !== chat.generation) { resolve(); return; }
     bubble.classList.add("typing");
-    bubble.setAttribute("aria-label", "Night Desk is typing");
+    bubble.setAttribute("aria-label", "Vigil is typing");
     bubble.replaceChildren(document.createElement("span"), document.createElement("span"), document.createElement("span"));
     $("#chatLog").appendChild(turn);
     turn.scrollIntoView({ block: "end" });
@@ -377,7 +377,6 @@ function showScreen(name) {
   $("#deskScreen").hidden = resident;
   $("#showResident").classList.toggle("active", resident);
   $("#showDesk").classList.toggle("active", !resident);
-  $("#screenLabel").textContent = resident ? "Resident" : "Desk";
   if (!resident) render();
   else focusChat();
   if (location.hash !== (resident ? "#resident" : "#desk")) {
@@ -387,7 +386,6 @@ function showScreen(name) {
 
 // ---- Wire up ------------------------------------------------------------
 function init() {
-  $("#asOf").textContent = "Mon, Oct 5, 2026 7:00 AM";
   $("#propertyFilter").insertAdjacentHTML("beforeend", PROPERTIES.map(p => `<option>${p}</option>`).join(""));
 
   $("#categoryList").addEventListener("click", e => {
