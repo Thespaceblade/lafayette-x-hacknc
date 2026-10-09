@@ -105,13 +105,20 @@ def api_add_request(payload: dict) -> dict:
     if not body:
         raise HTTPException(status_code=400, detail="body is required")
     ensure_loaded()
+    name = str(payload.get("sender") or "").strip()
+    contact = str(payload.get("contact") or "").strip()
+    sender = f"{name}, {contact}" if name and contact and contact not in name else (name or contact)
     result = session.paste(
         body=body,
         channel=str(payload.get("channel") or "web form"),
-        sender=str(payload.get("sender") or ""),
-        unit=str(payload.get("unit") or ""),
+        sender=sender,
+        unit=str(payload.get("unit") or "").strip(),
     )
-    return to_request(result)
+    request = to_request(result)
+    chosen_property = str(payload.get("property") or "").strip()
+    if chosen_property and not request["property"]:
+        request["property"] = chosen_property
+    return request
 
 
 app.mount("/", StaticFiles(directory=str(ROOT / "frontend"), html=True), name="frontend")

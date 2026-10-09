@@ -9,16 +9,16 @@ const PROPERTIES = ["The Weaver", "Estes Commons", "Pritchard Court", "Merritt M
 
 // Problem categories, in priority order. `due` returns the response deadline.
 const CATEGORIES = [
-  { id: "emergency", label: "Emergency", color: "var(--emergency)", owner: "Luis (919-555-0100) + after-hours vendor", due: d => addHours(d, 1) },
-  { id: "urgent",    label: "Urgent repair", color: "var(--urgent)", owner: "Luis", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
-  { id: "fraud",     label: "Bank change / possible fraud", color: "var(--emergency)", owner: "Priya — do not act", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
-  { id: "rent",      label: "Rent & payments", color: "var(--priya)", owner: "Priya", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
-  { id: "legal",     label: "Lease break, sublease & legal", color: "var(--priya)", owner: "Priya", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
-  { id: "esa",       label: "Service & support animals", color: "var(--priya)", owner: "Priya", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
-  { id: "leasing",   label: "Leasing & showings", color: "var(--info)", owner: "Jake (919-555-0102)", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
-  { id: "noise",     label: "Noise", color: "var(--info)", owner: "Log + acknowledge", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
-  { id: "routine",   label: "Routine repair", color: "var(--routine)", owner: "Luis (work order)", due: d => endOfBusinessDay(addBusinessDays(d, 5)) },
-  { id: "review",    label: "Needs review", color: "var(--review)", owner: "Human review", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
+  { id: "emergency", label: "Emergency", tone: "emergency", owner: "Luis (919-555-0100) + after-hours vendor", due: d => addHours(d, 1) },
+  { id: "urgent",    label: "Urgent repair", tone: "urgent", owner: "Luis", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
+  { id: "fraud",     label: "Bank change / possible fraud", tone: "person", owner: "Priya — do not act", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
+  { id: "rent",      label: "Rent & payments", tone: "person", owner: "Priya", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
+  { id: "legal",     label: "Lease break, sublease & legal", tone: "person", owner: "Priya", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
+  { id: "esa",       label: "Service & support animals", tone: "person", owner: "Priya", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
+  { id: "leasing",   label: "Leasing & showings", tone: "info", owner: "Jake (919-555-0102)", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
+  { id: "noise",     label: "Noise", tone: "info", owner: "Log + acknowledge", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
+  { id: "routine",   label: "Routine repair", tone: "routine", owner: "Luis (work order)", due: d => endOfBusinessDay(addBusinessDays(d, 5)) },
+  { id: "review",    label: "Needs a person", tone: "person", owner: "A person reviews", due: d => endOfBusinessDay(addBusinessDays(d, 1)) },
 ];
 const CAT = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
 
@@ -141,11 +141,11 @@ function matches(r, ignoreCategory = false) {
 
 function renderCategories() {
   const pool = state.requests.filter(r => matches(r, true));
-  const items = [{ id: "", label: "All problems", color: "var(--muted)" }, ...CATEGORIES];
+  const items = [{ id: "", label: "All problems", tone: "all" }, ...CATEGORIES];
   $("#categoryList").innerHTML = items.map(c => {
     const n = c.id ? pool.filter(r => r.category === c.id).length : pool.length;
     return `<li><button data-cat="${c.id}" class="${state.category === c.id ? "active" : ""}">
-      <span class="dot" style="background:${c.color}"></span>${c.label}<span class="n">${n}</span></button></li>`;
+      <span class="dot${c.id ? ` cat-${c.id}` : ""}"></span>${c.label}<span class="n">${n}</span></button></li>`;
   }).join("");
 }
 
@@ -165,16 +165,18 @@ function renderList() {
     const dueText = r.overdue
       ? `<span class="overdue">Overdue by ${fmtDuration(NOW - r.due)} as of Mon 7:00 AM</span>`
       : `Respond by ${fmt.format(r.due)}`;
-    return `<li class="card ${r.id === state.freshId ? "new" : ""}" style="--c:${c.color}">
+    const needsPerson = r.category === "review" || (typeof r.confidence === "number" && r.confidence < 0.6 && r.category !== "fraud");
+    return `<li class="card nd-card cat-${r.category} ${r.id === state.freshId ? "new" : ""}">
       <div class="meta">
-        <span class="badge" style="--c:${c.color}">${c.label}</span>
+        <span class="badge tone-${c.tone}">${c.label}</span>
+        ${needsPerson && r.category !== "review" ? `<span class="badge tone-person">Needs a person</span>` : ""}
         <span class="who">${esc(r.sender || "Unknown sender")}</span>
         <span>${esc(where)}</span>
         <span>${esc(r.channel || "")} · ${fmt.format(r.receivedDate)}</span>
         ${r.language !== "en" ? `<span class="tag">${esc(r.language.toUpperCase())}</span>` : ""}
         ${r.followUp ? `<span class="tag">Follow-up to ${esc(r.followUp)}</span>` : ""}
-        ${typeof r.confidence === "number" ? `<span class="tag">${Math.round(r.confidence * 100)}%</span>` : ""}
-        ${r.gemini_called === true ? `<span class="tag">Gemini draft</span>` : r.gemini_called === false ? `<span class="tag">No LLM</span>` : ""}
+        ${typeof r.confidence === "number" ? `<span class="tag num">${Math.round(r.confidence * 100)}%</span>` : ""}
+        ${r.gemini_called === true ? `<span class="tag ours">Gemini draft</span>` : r.gemini_called === false ? `<span class="tag">No LLM</span>` : ""}
       </div>
       <p>${esc(r.body)}</p>
       ${r.agent ? `<p class="agent">${esc(r.agent)}</p>` : ""}
@@ -185,23 +187,172 @@ function renderList() {
 
 function render() { renderCategories(); renderList(); }
 
-// ---- Form ---------------------------------------------------------------
-function updateEmergencyNote() {
-  const f = $("#requestForm");
-  const text = f.elements.body.value;
-  const cat = f.elements.category.value || (text.trim() ? classify(text) : "");
-  const note = $("#emergencyNote");
-  note.hidden = cat !== "emergency";
-  if (!note.hidden) note.textContent = safetyNote(text);
+// ---- Resident chat ------------------------------------------------------
+// One question at a time. Answers are collected here, then sent with the same
+// POST /api/requests payload the old form used.
+const CHAT_STEPS = [
+  { key: "sender", ask: "Name?", placeholder: "Your name", required: true },
+  { key: "contact", ask: "Phone or email?", placeholder: "Phone or email", required: true },
+  { key: "property", ask: "Property?", placeholder: "Property, or not sure", choices: ["Not sure", ...PROPERTIES] },
+  { key: "unit", ask: "Unit?", placeholder: "e.g. W-104", skip: "Skip" },
+  { key: "body", ask: "Message?", placeholder: "What's going on?", required: true, message: true },
+];
+const chat = { step: 0, answers: {}, busy: false, generation: 0 };
+let speakQueue = Promise.resolve();
+
+function addBubble(role, text) {
+  const turn = document.createElement("li");
+  turn.className = `turn ${role}`;
+  const bubble = document.createElement("p");
+  bubble.className = `bubble ${role}`;
+  if (role !== "bot") {
+    bubble.textContent = text;
+    turn.appendChild(bubble);
+    $("#chatLog").appendChild(turn);
+    turn.scrollIntoView({ block: "end" });
+    return bubble;
+  }
+
+  const logo = document.createElement("img");
+  logo.className = "chat-logo";
+  logo.src = "vigil-logo.svg";
+  logo.width = 32;
+  logo.height = 32;
+  logo.alt = "";
+  logo.setAttribute("aria-hidden", "true");
+  turn.append(logo, bubble);
+
+  const spoken = { text };
+  const generation = chat.generation;
+  speakQueue = speakQueue.then(() => new Promise(resolve => {
+    if (generation !== chat.generation) { resolve(); return; }
+    bubble.classList.add("typing");
+    bubble.setAttribute("aria-label", "Vigil is typing");
+    bubble.replaceChildren(document.createElement("span"), document.createElement("span"), document.createElement("span"));
+    $("#chatLog").appendChild(turn);
+    turn.scrollIntoView({ block: "end" });
+    window.setTimeout(() => {
+      if (generation !== chat.generation) { resolve(); return; }
+      bubble.classList.remove("typing");
+      bubble.removeAttribute("aria-label");
+      bubble.textContent = spoken.text;
+      turn.scrollIntoView({ block: "end" });
+      resolve();
+    }, 1000);
+  }));
+  return {
+    set textContent(value) { spoken.text = value; if (!bubble.classList.contains("typing") && bubble.isConnected) bubble.textContent = value; },
+    get textContent() { return spoken.text; },
+  };
 }
 
-async function submitRequest(e) {
+function focusChat() {
+  if (!$("#residentScreen").hidden && !$("#composerRow").hidden) $("#chatInput").focus();
+}
+
+function renderChoices(step) {
+  const box = $("#choices");
+  box.replaceChildren();
+  const items = [];
+  if (step.choices) items.push(...step.choices.map(label => ({ label, value: label === "Not sure" ? "" : label })));
+  if (step.skip) items.push({ label: step.skip, value: "" });
+  items.forEach(item => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = item.label;
+    button.addEventListener("click", () => acceptStep(item.label, item.value));
+    box.appendChild(button);
+  });
+}
+
+function askStep() {
+  const step = CHAT_STEPS[chat.step];
+  addBubble("bot", step.ask);
+  const input = $("#chatInput");
+  input.placeholder = step.placeholder;
+  input.value = "";
+  input.rows = step.message ? 3 : 1;
+  renderChoices(step);
+  updateEmergencyNote();
+  focusChat();
+}
+
+function resetChat() {
+  chat.generation += 1;
+  speakQueue = Promise.resolve();
+  chat.step = 0;
+  chat.answers = {};
+  chat.busy = false;
+  $("#chatLog").replaceChildren();
+  $("#chatDone").hidden = true;
+  $("#composerRow").hidden = false;
+  $("#chatInput").disabled = false;
+  $("#chatSend").disabled = false;
+  $("#emergencyNote").hidden = true;
+  addBubble("bot", "Hi. I'll ask one thing at a time, then send your message to the desk.");
+  askStep();
+}
+
+function matchProperty(text) {
+  const t = text.trim().toLowerCase();
+  if (!t || /^(not sure|unsure|idk|i don't know|i dont know|don't know|dont know|skip|n\/a|none)$/.test(t)) return "";
+  const hits = PROPERTIES.filter(p => p.toLowerCase() === t || p.toLowerCase().includes(t));
+  return hits.length === 1 ? hits[0] : null;
+}
+
+function acceptStep(label, value) {
+  if (chat.busy || chat.step >= CHAT_STEPS.length) return;
+  chat.answers[CHAT_STEPS[chat.step].key] = value;
+  addBubble("user", label);
+  chat.step += 1;
+  $("#emergencyNote").hidden = true;
+  if (chat.step < CHAT_STEPS.length) askStep();
+  else finishChat();
+}
+
+function updateEmergencyNote() {
+  const step = CHAT_STEPS[chat.step];
+  const note = $("#emergencyNote");
+  const text = step && step.key === "body" ? $("#chatInput").value : "";
+  const emergency = text.trim() && classify(text) === "emergency";
+  note.hidden = !emergency;
+  if (emergency) note.textContent = safetyNote(text);
+}
+
+function onChatSubmit(e) {
   e.preventDefault();
-  const f = e.target;
+  if (chat.busy || chat.step >= CHAT_STEPS.length) return;
+  const step = CHAT_STEPS[chat.step];
+  const raw = $("#chatInput").value.trim();
+  if (step.key === "property") {
+    const matched = matchProperty(raw);
+    if (matched === null) {
+      addBubble("bot", "Pick one of the properties, or say you're not sure.");
+      return;
+    }
+    acceptStep(matched || "Not sure", matched);
+    return;
+  }
+  if (step.key === "unit") {
+    const skip = !raw || /^(skip|none|n\/a|not sure)$/i.test(raw);
+    acceptStep(skip ? "Skip" : raw, skip ? "" : raw);
+    return;
+  }
+  if (step.required && !raw) {
+    addBubble("bot", `I still need your ${step.ask.replace("?", "").toLowerCase()}.`);
+    return;
+  }
+  acceptStep(raw, raw);
+}
+
+async function finishChat() {
+  chat.busy = true;
+  $("#composerRow").hidden = true;
+  $("#choices").replaceChildren();
+  const waiting = addBubble("bot", "Sending this to the desk…");
   const payload = {
-    sender: f.elements.sender.value.trim(), contact: f.elements.contact.value.trim(), property: f.elements.property.value,
-    unit: f.elements.unit.value.trim(), body: f.elements.body.value.trim(), channel: "web form",
-    category: f.elements.category.value || undefined,
+    sender: chat.answers.sender, contact: chat.answers.contact, property: chat.answers.property,
+    unit: chat.answers.unit, body: chat.answers.body, channel: "web form",
   };
   let saved;
   try {
@@ -209,25 +360,33 @@ async function submitRequest(e) {
     if (!res.ok) throw new Error(res.status);
     saved = await res.json();
   } catch {
-    saved = { ...payload, id: "N" + (state.requests.length + 1), received_at: new Date().toISOString() };
+    saved = { ...payload, id: "N" + (state.requests.length + 1), received_at: new Date().toISOString(), reply: "" };
   }
   const r = enrich({ ...saved, isNew: true });
   state.requests = markFollowUps([r, ...state.requests]);
   state.freshId = r.id;
   state.category = ""; state.sort = "newest"; $("#sort").value = "newest";
-  f.reset(); $("#emergencyNote").hidden = true;
-  $("#formDialog").close();
+  waiting.textContent = saved.reply || "Thanks. Someone at Laurel Hill will follow up.";
+  $("#chatDone").hidden = false;
   render();
+}
+
+function showScreen(name) {
+  const resident = name === "resident";
+  $("#residentScreen").hidden = !resident;
+  $("#deskScreen").hidden = resident;
+  $("#showResident").classList.toggle("active", resident);
+  $("#showDesk").classList.toggle("active", !resident);
+  if (!resident) render();
+  else focusChat();
+  if (location.hash !== (resident ? "#resident" : "#desk")) {
+    history.replaceState(null, "", resident ? "#resident" : "#desk");
+  }
 }
 
 // ---- Wire up ------------------------------------------------------------
 function init() {
-  $("#asOf").textContent = "Mon, Oct 5, 2026 7:00 AM (replay)";
-  const propOpts = PROPERTIES.map(p => `<option>${p}</option>`).join("");
-  $("#propertyFilter").insertAdjacentHTML("beforeend", propOpts);
-  $("#formProperty").insertAdjacentHTML("beforeend", propOpts);
-  $("#formCategory").insertAdjacentHTML("beforeend",
-    CATEGORIES.filter(c => c.id !== "review").map(c => `<option value="${c.id}">${c.label}</option>`).join(""));
+  $("#propertyFilter").insertAdjacentHTML("beforeend", PROPERTIES.map(p => `<option>${p}</option>`).join(""));
 
   $("#categoryList").addEventListener("click", e => {
     const b = e.target.closest("button[data-cat]"); if (!b) return;
@@ -238,11 +397,21 @@ function init() {
   $("#overdueOnly").addEventListener("change", e => { state.overdueOnly = e.target.checked; render(); });
   $("#sort").addEventListener("change", e => { state.sort = e.target.value; renderList(); });
 
-  $("#newBtn").addEventListener("click", () => $("#formDialog").showModal());
-  $("#cancelBtn").addEventListener("click", () => $("#formDialog").close());
-  $("#requestForm").addEventListener("submit", submitRequest);
-  $("#requestForm").elements.body.addEventListener("input", updateEmergencyNote);
-  $("#requestForm").elements.category.addEventListener("change", updateEmergencyNote);
+  $("#requestForm").addEventListener("submit", onChatSubmit);
+  $("#chatInput").addEventListener("input", updateEmergencyNote);
+  $("#chatInput").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      $("#requestForm").requestSubmit();
+    }
+  });
+  $("#showResident").addEventListener("click", () => showScreen("resident"));
+  $("#showDesk").addEventListener("click", () => showScreen("desk"));
+  $("#toDesk").addEventListener("click", () => showScreen("desk"));
+  $("#sendAnother").addEventListener("click", resetChat);
+  window.addEventListener("hashchange", () => showScreen(location.hash === "#resident" ? "resident" : "desk"));
+  resetChat();
+  showScreen(location.hash === "#resident" ? "resident" : "desk");
 
   load();
 }

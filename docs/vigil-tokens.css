@@ -1,0 +1,56 @@
+/* Vigil design tokens, taken from the pitch slide. */
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap");
+
+:root {
+  /* Color */
+  --nd-navy: #14213D;      /* page background, text on amber */
+  --nd-panel: #1D2E52;     /* cards and panels */
+  --nd-border: #2E4272;    /* 1px card border */
+  --nd-bar: #3B4F7F;       /* neutral bars, the "other approach" */
+  --nd-amber: #F2B84B;     /* accent: logo, icons, hero panels, our numbers */
+  --nd-ivory: #F4F1EA;     /* primary text on dark */
+  --nd-mist: #C9D1E3;      /* secondary text on dark */
+
+  /* Type */
+  --nd-font: "DM Sans", Arial, sans-serif;
+  --nd-weight-body: 400;
+  --nd-weight-bold: 700;
+  --nd-leading-tight: 1.1;   /* headings and big numbers */
+  --nd-leading-body: 1.4;
+
+  /* Shape */
+  --nd-radius-card: 24px;
+  --nd-radius-bar: 10px;
+  --nd-radius-bar-small: 6px;
+  --nd-border-card: 1px solid var(--nd-border);
+  --nd-space-card: 24px;     /* card padding, 28px on hero and bar panels */
+  --nd-gap-tight: 12px;
+  --nd-gap: 20px;
+  --nd-gap-wide: 32px;
+}
+
+body {
+  background: var(--nd-navy);
+  color: var(--nd-ivory);
+  font-family: var(--nd-font);
+  font-weight: var(--nd-weight-body);
+  line-height: var(--nd-leading-body);
+}
+
+.nd-card {
+  background: var(--nd-panel);
+  border: var(--nd-border-card);
+  border-radius: var(--nd-radius-card);
+  padding: var(--nd-space-card);
+}
+.nd-card--highlight { border-color: var(--nd-amber); }
+.nd-hero {
+  background: var(--nd-amber);
+  color: var(--nd-navy);
+  border-radius: var(--nd-radius-card);
+  padding: 28px;
+}
+.nd-muted { color: var(--nd-mist); }
+.nd-accent { color: var(--nd-amber); }
+.nd-bar { background: var(--nd-bar); border-radius: var(--nd-radius-bar); }
+.nd-bar--ours { background: var(--nd-amber); color: var(--nd-navy); }

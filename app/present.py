@@ -47,6 +47,7 @@ def to_request(result: dict) -> dict:
         "confidence": (result.get("classification") or {}).get("confidence"),
         "gemini_called": bool(result.get("gemini_called")),
         "agent": _agent_text(result),
+        "reply": result.get("tenant_reply") or "",
     }
 
 
